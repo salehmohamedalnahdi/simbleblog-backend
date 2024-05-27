@@ -1,4 +1,5 @@
 const service = require('../services/blogServices');
+const schema=require('../validation/validationSchema')
 
 async function showBlogs(req, res) {
   try {
@@ -11,9 +12,13 @@ async function showBlogs(req, res) {
 }
 
 async function createBlog(req,res){
+  const creatSchema=schema.blogSchema()
+  const { error, value } =creatSchema.validate(req.body);
+  if (error){
+    return res.status(400).json({ error: error.details[0].message })
+  }
   try {
-    const requestBody=req.body
-    const newBlog=await service.addBlog(requestBody)
+    const newBlog=await service.addBlog(value)
     res.json(newBlog);
   } catch (error) {
     console.error('Error in controller:', error);
@@ -38,17 +43,21 @@ async function deleteaBlog(req,res) {
 }
 
 async function updateBlog(req,res) {
+  //the body must be as {title:"",content:""}
+  const creatSchema=schema.blogSchema()
+  const { error, value } =creatSchema.validate(req.body);
+  if (error){
+    return res.status(400).json({ error: error.details[0].message })
+  }
   try {
-   //the body must be as {title:"",content:""}
-   const requestBody=req.body
    const blogId=req.params.blogId
    const checkBlog= await service.Check(blogId)
    if(!checkBlog){
      return res.json({ error: 'blog is not exsisted' });
    }
-   const blog= await service.updateBlog(requestBody,blogId)
+   const blog= await service.updateBlog(value,blogId)
   console.log("updateed is done")
-  res.json(requestBody)
+  res.json(value)
  }
    catch (error) {
    console.error('Error in controller:', error);
